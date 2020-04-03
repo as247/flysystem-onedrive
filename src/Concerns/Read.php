@@ -111,9 +111,10 @@ trait Read
         return $results;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+	/**
+	 * @param $path
+	 * @return bool|array
+	 */
     public function getMetadata($path)
     {
         if($this->cache->has($path)){
