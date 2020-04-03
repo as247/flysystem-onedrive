@@ -27,7 +27,7 @@ class TempCache
             file_put_contents($path, serialize(['data' => $value, 'expire' => $expires]));
         }
     }
-    function ensureCacheDir(){
+    protected function ensureCacheDir(){
         if(file_exists($this->cacheDir) && is_dir($this->cacheDir)){
             return true;
         }

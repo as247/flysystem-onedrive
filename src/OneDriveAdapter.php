@@ -8,18 +8,20 @@
 
 namespace As247\Flysystem\OneDrive;
 
+use ArrayObject;
 use As247\Flysystem\OneDrive\Concerns\Adapter;
 use As247\Flysystem\OneDrive\Concerns\Read;
+use Exception;
 use Microsoft\Graph\Graph;
 
 use League\Flysystem\Adapter\AbstractAdapter;
-use League\Flysystem\Adapter\Polyfill\NotSupportingVisibilityTrait;
+use function GuzzleHttp\Psr7\stream_for;
 
 class OneDriveAdapter extends AbstractAdapter
 {
     use Adapter, Read;
 
-    /** @var \Microsoft\Graph\Graph */
+    /** @var Graph */
     protected $graph;
     const ROOT = '/me/drive/root';
     protected $publishPermission = [
@@ -105,15 +107,15 @@ class OneDriveAdapter extends AbstractAdapter
             if (is_resource($contents)) {
                 $stats = fstat($contents);
                 if (empty($stats['size'])) {
-                    throw new \Exception('Empty stream');
+                    throw new Exception('Empty stream');
                 }
             }
-            $stream = \GuzzleHttp\Psr7\stream_for($contents);
+            $stream = stream_for($contents);
 
             $response = $this->graph->createRequest('PUT', $endpoint)
                 ->attachBody($stream)
                 ->execute();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
         $this->cache->update($path,$response->getBody());
@@ -132,7 +134,7 @@ class OneDriveAdapter extends AbstractAdapter
         if (!$this->has($parent)) {
             if (!$this->mkdir($parent)) {
                 return false;
-            };//create parent
+            }
         }
         $name = basename($path);
         $endpoint = $this->prefixForEndpoint($parent, 'children');
@@ -140,9 +142,9 @@ class OneDriveAdapter extends AbstractAdapter
             $response = $this->graph->createRequest('POST', $endpoint)
                 ->attachBody([
                     'name' => $name,
-                    'folder' => new \ArrayObject(),
+                    'folder' => new ArrayObject(),
                 ])->execute();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
         $this->cache->update($path,$response->getBody());
@@ -154,7 +156,7 @@ class OneDriveAdapter extends AbstractAdapter
         try{
             $response = $this->graph->createRequest('POST', $endpoint)
                 ->attachBody($body)->execute();
-        }catch (\Exception $e){
+        }catch (Exception $e){
             return false;
         }
         return $response->getBody();
@@ -175,7 +177,7 @@ class OneDriveAdapter extends AbstractAdapter
         $endpoint=$this->prefixForEndpoint($path,'permissions/'.$idToRemove);
         try{
             $this->graph->createRequest('DELETE', $endpoint)->execute();
-        }catch (\Exception $e){
+        }catch (Exception $e){
             return false;
         }
         return true;
