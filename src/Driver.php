@@ -3,17 +3,16 @@
 
 namespace As247\Flysystem\OneDrive;
 
-
-use As247\Flysystem\GoogleDrive\Exceptions\GoogleDriveException;
 use As247\Flysystem\OneDrive\Exceptions\OneDriveException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
+use Microsoft\Graph\Exception\GraphException;
 use Microsoft\Graph\Graph;
 use function GuzzleHttp\Psr7\stream_for;
-use Exception;
 use ArrayObject;
+
 class Driver
 {
 	/** @var Graph */
@@ -35,11 +34,14 @@ class Driver
 		$this->rootPath=$root;
 		$this->cache = new Cache();
 	}
+
 	/**
 	 * @param string $path
-	 * @param resource|string $contents
-	 * @param $config
-	 * @return array|false file metadata
+	 * @param $contents
+	 * @param Config $config
+	 * @return array
+	 * @throws GraphException
+	 * @throws OneDriveException
 	 */
 	public function upload(string $path, $contents, Config $config)
 	{
@@ -62,7 +64,11 @@ class Driver
 	}
 
 	/**
-	 * {@inheritdoc}
+	 * @param $path
+	 * @param $newPath
+	 * @return bool
+	 * @throws GraphException
+	 * @throws OneDriveException
 	 */
 	public function rename($path, $newPath)
 	{
@@ -88,7 +94,11 @@ class Driver
 	}
 
 	/**
-	 * {@inheritdoc}
+	 * @param $path
+	 * @param $newPath
+	 * @return bool
+	 * @throws GraphException
+	 * @throws OneDriveException
 	 */
 	public function copy($path, $newPath)
 	{
@@ -117,7 +127,10 @@ class Driver
 	}
 
 	/**
-	 * {@inheritdoc}
+	 * @param $path
+	 * @return bool
+	 * @throws GraphException
+	 * @throws OneDriveException
 	 */
 	public function delete($path)
 	{
@@ -135,7 +148,13 @@ class Driver
 		return true;
 	}
 
-	function ensureDirectory($path)
+	/**
+	 * @param $path
+	 * @return array|bool
+	 * @throws GraphException
+	 * @throws OneDriveException
+	 */
+	protected function ensureDirectory($path)
 	{
 		$path=$this->cleanPath($path);
 		if($this->isDirectory($path)){
@@ -165,7 +184,10 @@ class Driver
 	}
 
 	/**
-	 * {@inheritdoc}
+	 * @param $dirname
+	 * @return bool
+	 * @throws OneDriveException
+	 * @throws GraphException
 	 */
 	public function deleteDir($dirname)
 	{
@@ -173,13 +195,24 @@ class Driver
 	}
 
 	/**
-	 * {@inheritdoc}
+	 * @param $path
+	 * @param Config $config
+	 * @return array|bool
+	 * @throws OneDriveException
+	 * @throws GraphException
 	 */
 	public function createDir($path, Config $config)
 	{
 		return $this->ensureDirectory($path);
 	}
 
+	/**
+	 * @param $path
+	 * @param $visibility
+	 * @return array|bool
+	 * @throws GraphException
+	 * @throws OneDriveException
+	 */
 	public function setVisibility($path, $visibility)
 	{
 		$result = ($visibility === AdapterInterface::VISIBILITY_PUBLIC) ? $this->publish($path) : $this->unPublish($path);
@@ -188,6 +221,13 @@ class Driver
 		}
 		return false;
 	}
+
+	/**
+	 * @param $path
+	 * @return mixed
+	 * @throws GraphException
+	 * @throws OneDriveException
+	 */
 	function publish($path){
 		$endpoint=$this->prefixForEndpoint($path,'createLink');
 		$body=['type'=>'view','scope'=>'anonymous'];
@@ -195,10 +235,17 @@ class Driver
 			$response = $this->graph->createRequest('POST', $endpoint)
 				->attachBody($body)->execute();
 		}catch (ClientException $e){
-			return false;
+			throw new OneDriveException($e->getMessage(),$e->getCode(),$e);
 		}
 		return $response->getBody();
 	}
+
+	/**
+	 * @param $path
+	 * @return bool
+	 * @throws GraphException
+	 * @throws OneDriveException
+	 */
 	function unPublish($path){
 		$permissions=$this->getPermissions($path);
 		$idToRemove='';
@@ -216,7 +263,7 @@ class Driver
 		try{
 			$this->graph->createRequest('DELETE', $endpoint)->execute();
 		}catch (ClientException $e){
-			return false;
+			throw new OneDriveException($e->getMessage(),$e->getCode(),$e);
 		}
 		return true;
 	}
@@ -235,12 +282,6 @@ class Driver
 		];
 	}
 
-	public function removePathPrefix($path)
-	{
-		$path = substr($path, strlen(static::ROOT));
-		$path = trim($path, ':\/');
-		return $path;
-	}
 
 	protected function cleanPath($path){
 		$path = trim($path, '\\/');
@@ -293,12 +334,18 @@ class Driver
 		return rtrim($path, ':');
 	}
 
+	/**
+	 * @param $path
+	 * @return array|bool
+	 * @throws GraphException
+	 * @throws OneDriveException
+	 */
 	protected function getPermissions($path){
 		$endpoint=$this->prefixForEndpoint($path,'permissions');
 		try {
 			$response = $this->graph->createRequest('GET', $endpoint)->execute();
 		} catch (ClientException $e) {
-			return false;
+			throw new OneDriveException($e->getMessage(),$e->getCode(),$e);
 		}
 
 		$result=$response->getBody();
@@ -308,6 +355,13 @@ class Driver
 		}
 		return $permissions;
 	}
+
+	/**
+	 * @param $path
+	 * @return string
+	 * @throws GraphException
+	 * @throws OneDriveException
+	 */
 	public function getVisibility($path){
 		$permissions=$this->getPermissions($path);
 		$visibility = AdapterInterface::VISIBILITY_PRIVATE;
@@ -323,20 +377,41 @@ class Driver
 		}
 		return $visibility;
 	}
+
+	/**
+	 * @param $path
+	 * @return mixed
+	 * @throws OneDriveException
+	 * @throws GraphException
+	 */
 	public function getUrl($path){
 		if($meta=$this->getMetadata($path)) {
 			return $meta['link'];
 		}
+		return null;
 	}
+
+	/**
+	 * @param $path
+	 * @param int $expire
+	 * @param array $options
+	 * @return mixed
+	 * @throws OneDriveException
+	 * @throws GraphException
+	 */
 	public function getTemporaryUrl($path,$expire=3600,$options=[]){
 		$meta=$this->getMetadata($path);
 		if(!empty($meta['downloadUrl'])){
 			return $meta['downloadUrl'];
 		}
+		return null;
 	}
+
 	/**
 	 * @param $path
-	 * @return bool|array
+	 * @return array|bool
+	 * @throws OneDriveException
+	 * @throws GraphException
 	 */
 	public function getMetadata($path)
 	{
@@ -359,17 +434,30 @@ class Driver
 				$this->cache->missing($path);
 				return false;
 			}else{
-				throw $e;
+				throw new OneDriveException($e->getMessage(),$e->getCode(),$e);
 			}
 		}
 		$this->cache->update($path,$response->getBody());
 		return $this->normalizeResponse($this->cache->get($path), $path);
 	}
 
+	/**
+	 * @param $path
+	 * @return bool
+	 * @throws GraphException
+	 * @throws OneDriveException
+	 */
 	public function isDirectory($path){
 		$meta=$this->getMetadata($path);
 		return isset($meta['type'])&& $meta['type']==='dir';
 	}
+
+	/**
+	 * @param $path
+	 * @return bool
+	 * @throws GraphException
+	 * @throws OneDriveException
+	 */
 	public function isFile($path){
 		$meta=$this->getMetadata($path);
 		return isset($meta['type'])&& $meta['type']==='file';
@@ -377,7 +465,10 @@ class Driver
 
 
 	/**
-	 * {@inheritdoc}
+	 * @param $path
+	 * @return bool
+	 * @throws GraphException
+	 * @throws OneDriveException
 	 */
 	public function has($path)
 	{
@@ -387,7 +478,10 @@ class Driver
 
 
 	/**
-	 * {@inheritdoc}
+	 * @param $path
+	 * @return array|bool
+	 * @throws OneDriveException
+	 * @throws GraphException
 	 */
 	public function read($path)
 	{
@@ -402,6 +496,12 @@ class Driver
 		return $object;
 	}
 
+	/**
+	 * @param $path
+	 * @return array|bool
+	 * @throws OneDriveException
+	 * @throws GraphException
+	 */
 	public function readStream($path){
 		$downloadUrl=$this->getTemporaryUrl($path);
 		if($downloadUrl){
@@ -411,8 +511,8 @@ class Driver
 				$response = $client->get($downloadUrl, ['stream' => true]);
 				$stream = $response->getBody()->detach();
 
-			}catch (ClientException $exception){
-
+			}catch (ClientException $e){
+				throw new OneDriveException($e->getMessage(),$e->getCode(),$e);
 			}
 			if($stream!==null) {
 				return compact('stream');
@@ -424,7 +524,11 @@ class Driver
 
 
 	/**
-	 * {@inheritdoc}
+	 * @param string $directory
+	 * @param bool $recursive
+	 * @return array
+	 * @throws OneDriveException
+	 * @throws GraphException
 	 */
 	public function listContents($directory = '', $recursive = false)
 	{
@@ -445,11 +549,12 @@ class Driver
 					$results = array_merge($results, $this->listContents($directory.'/'.$item['name'], true));
 				}
 			}
+			return $results;
 		} catch (ClientException $e) {
-			return [];
+			throw new OneDriveException($e->getMessage(),$e->getCode(),$e);
 		}
 
-		return $results;
+
 	}
 
 
