@@ -23,7 +23,7 @@ class TokenHelper
      * @var \Illuminate\Cache\CacheManager
      */
     protected $cache;
-    protected $tokenEndpoint='https://login.microsoftonline.com/common/oauth2/v2.0/token';
+    protected $tokenEndpoint='https://login.microsoftonline.com/7c1d248e-7149-45f7-a26d-626430f958d4/oauth2/v2.0/token';
     public function __construct($clientId='',$clientSecret='',$refreshToken='')
     {
         $this->clientId=$clientId;
