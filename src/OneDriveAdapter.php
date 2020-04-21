@@ -10,7 +10,6 @@ namespace As247\Flysystem\OneDrive;
 
 use As247\Flysystem\OneDrive\Exceptions\OneDriveException;
 use League\Flysystem\Config;
-use Microsoft\Graph\Exception\GraphException;
 use Microsoft\Graph\Graph;
 
 use League\Flysystem\Adapter\AbstractAdapter;
@@ -30,12 +29,12 @@ class OneDriveAdapter extends AbstractAdapter
 	 * @param string $contents
 	 * @param Config $config
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
-	public function write($path, $contents, Config $config)
+	public function write($path, $contents, Config $config=null)
 	{
 		try {
-			return $this->driver->upload($path, $contents, $config);
+			$this->driver->write($path, $contents, $config);
+			return $this->getMetadata($path);
 		}catch (OneDriveException $e){
 			return false;
 		}
@@ -46,12 +45,12 @@ class OneDriveAdapter extends AbstractAdapter
 	 * @param resource $resource
 	 * @param Config $config
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function writeStream($path, $resource, Config $config)
 	{
 		try {
-			return $this->driver->upload($path, $resource, $config);
+			$this->driver->writeStream($path, $resource, $config);
+			return $this->getMetadata($path);
 		}catch (OneDriveException $e){
 			return false;
 		}
@@ -62,15 +61,10 @@ class OneDriveAdapter extends AbstractAdapter
 	 * @param string $contents
 	 * @param Config $config
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function update($path, $contents, Config $config)
 	{
-		try {
-			return $this->driver->upload($path, $contents, $config);
-		}catch (OneDriveException $e){
-return false;
-}
+		return $this->write($path,$contents,$config);
 	}
 
 	/**
@@ -78,27 +72,22 @@ return false;
 	 * @param resource $resource
 	 * @param Config $config
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function updateStream($path, $resource, Config $config)
 	{
-		try {
-			return $this->driver->upload($path, $resource, $config);
-		}catch (OneDriveException $e){
-			return false;
-		}
+		return $this->writeStream($path,$resource,$config);
 	}
 
 	/**
 	 * @param string $path
 	 * @param string $newpath
 	 * @return bool
-	 * @throws GraphException
 	 */
 	public function rename($path, $newpath)
 	{
 		try {
-			return $this->driver->rename($path, $newpath);
+			$this->driver->move($path, $newpath);
+			return true;
 		}catch (OneDriveException $e){
 			return false;
 		}
@@ -108,12 +97,12 @@ return false;
 	 * @param string $path
 	 * @param string $newpath
 	 * @return bool
-	 * @throws GraphException
 	 */
 	public function copy($path, $newpath)
 	{
 		try {
-			return $this->driver->copy($path, $newpath);
+			$this->driver->copy($path, $newpath);
+			return true;
 		}catch (OneDriveException $exception){
 			return false;
 		}
@@ -122,12 +111,12 @@ return false;
 	/**
 	 * @param string $path
 	 * @return bool
-	 * @throws GraphException
 	 */
 	public function delete($path)
 	{
 		try {
-			return $this->driver->delete($path);
+			$this->driver->delete($path);
+			return true;
 		}catch (OneDriveException $e){
 			return false;
 		}
@@ -136,12 +125,12 @@ return false;
 	/**
 	 * @param string $dirname
 	 * @return bool
-	 * @throws GraphException
 	 */
 	public function deleteDir($dirname)
 	{
 		try {
-			return $this->driver->deleteDir($dirname);
+			$this->driver->deleteDirectory($dirname);
+			return true;
 		}catch (OneDriveException $e){
 			return false;
 		}
@@ -151,12 +140,12 @@ return false;
 	 * @param string $dirname
 	 * @param Config $config
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function createDir($dirname, Config $config)
 	{
 		try {
-			return $this->driver->createDir($dirname, $config);
+			$this->driver->createDirectory($dirname, $config);
+			return true;
 		}catch (OneDriveException $e){
 			return false;
 		}
@@ -166,12 +155,12 @@ return false;
 	 * @param string $path
 	 * @param string $visibility
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function setVisibility($path, $visibility)
 	{
 		try {
-			return $this->driver->setVisibility($path, $visibility);
+			$this->driver->setVisibility($path, $visibility);
+			return true;
 		}catch (OneDriveException $e){
 			return false;
 		}
@@ -180,7 +169,6 @@ return false;
 	/**
 	 * @param string $path
 	 * @return bool
-	 * @throws GraphException
 	 */
 	public function has($path)
 	{
@@ -195,12 +183,11 @@ return false;
 	/**
 	 * @param string $path
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function read($path)
 	{
 		try {
-			return $this->driver->read($path);
+			return ['contents'=>$this->driver->read($path)];
 		}catch (OneDriveException $e){
 			return false;
 		}
@@ -209,12 +196,11 @@ return false;
 	/**
 	 * @param string $path
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function readStream($path)
 	{
 		try {
-			return $this->driver->readStream($path);
+			return ['stream'=>$this->driver->readStream($path)];
 		}catch (OneDriveException $e){
 			return false;
 		}
@@ -224,21 +210,20 @@ return false;
 	 * @param string $directory
 	 * @param bool $recursive
 	 * @return array
-	 * @throws GraphException
 	 */
 	public function listContents($directory = '', $recursive = false)
 	{
 		try {
-			return $this->driver->listContents($directory, $recursive);
+			return iterator_to_array($this->driver->listContents($directory, $recursive),false);
 		}catch (OneDriveException $e){
 			return [];
 		}
 	}
 
+
 	/**
 	 * @param string $path
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function getMetadata($path)
 	{
@@ -252,56 +237,35 @@ return false;
 	/**
 	 * @param string $path
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function getSize($path){
-		try {
-			return $this->driver->getMetadata($path);
-		}catch (OneDriveException $e){
-			return false;
-		}
-
+		return $this->getMetadata($path);
 	}
 
 	/**
 	 * @param string $path
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function getMimetype($path)
 	{
-		try {
-			return $this->driver->getMetadata($path);
-		} catch (OneDriveException $e) {
-			return false;
-		}
+		return $this->getMetadata($path);
 	}
 
 	/**
 	 * @param string $path
 	 * @return array|bool|false
-	 * @throws GraphException
 	 */
 	public function getTimestamp($path)
 	{
-		try {
-			return $this->driver->getMetadata($path);
-		}catch (OneDriveException $e){
-			return false;
-		}
+		return $this->getMetadata($path);
 	}
 
 	/**
 	 * @param string $path
 	 * @return array|false
-	 * @throws GraphException
 	 */
 	public function getVisibility($path)
 	{
-		try {
-			return ['path' => $path, 'visibility' => $this->driver->getVisibility($path)];
-		}catch (OneDriveException $e){
-			return false;
-		}
+		return $this->getMetadata($path);
 	}
 }
