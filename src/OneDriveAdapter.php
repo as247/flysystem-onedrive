@@ -266,6 +266,10 @@ class OneDriveAdapter extends AbstractAdapter
 	 */
 	public function getVisibility($path)
 	{
-		return $this->getMetadata($path);
+		try {
+			return $this->driver->getMetadata($path,true);
+		} catch (OneDriveException $e) {
+			return false;
+		}
 	}
 }

@@ -304,17 +304,17 @@ class Driver implements DriverInterface
 
 	/**
 	 * @param $path
-	 * @param bool $withPermissions fetch permissions
+	 * @param bool $withVisibility fetch permissions
 	 * @return array|bool
 	 * @throws OneDriveException
 	 */
-	public function getMetadata($path,$withPermissions=false)
+	public function getMetadata($path, $withVisibility=false)
 	{
 		$path=Util::cleanPath($path);
 
 		if($this->cache->has($path)){
 			if($data=$this->cache->get($path)) {
-				if($withPermissions && !isset($data['permissions'])){
+				if($withVisibility && !isset($data['permissions'])){
 					$data['permissions']=$this->getPermissions($path);
 				}
 				return $this->normalizeMetadata($data, $path);
@@ -338,7 +338,7 @@ class Driver implements DriverInterface
 			throw new OneDriveException($e->getMessage(),$e->getCode(),$e);
 		}
 		$data=$response->getBody();
-		if($withPermissions && !isset($response['permissions'])){
+		if($withVisibility && !isset($response['permissions'])){
 			$data['permissions']=$this->getPermissions($path);
 		}
 		$this->cache->update($path,$data);
