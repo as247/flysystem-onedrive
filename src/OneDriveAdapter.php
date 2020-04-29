@@ -32,7 +32,7 @@ class OneDriveAdapter extends AbstractAdapter
     public function __construct(Graph $graph, string $root = '')
     {
     	$this->driver=new Driver($graph);
-    	$this->setPathPrefix('Storage');
+    	$this->setPathPrefix('');
     }
     public function applyPathPrefix($path)
 	{
