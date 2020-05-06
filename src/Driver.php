@@ -45,26 +45,21 @@ class Driver implements DriverContract
 	 */
 	public function listContents(string $directory = '', bool $recursive = false): iterable
 	{
-
 		try {
 			$results = $this->oneDrive->listChildren($directory);
-			$results = array_map(function ($v) use ($directory) {
-				return $this->oneDrive->normalizeMetadata($v, $directory . '/' . $v['name']);
-			}, iterator_to_array($results, false));
-		} catch (ClientException $e) {
-			if ($e->getResponse()->getStatusCode() === 404) {
-				$results = [];
-			}
-		}
-		if ($recursive) {
 			foreach ($results as $id => $result) {
-				if ($result['type'] === 'dir') {
-					yield from $this->listContents($result['path'], $recursive);
+				$result = $this->oneDrive->normalizeMetadata($result, $directory . '/' . $result['name']);
+				if ($recursive) {
+					if ($result['type'] === 'dir') {
+						yield from $this->listContents($result['path'], $recursive);
+					}
 				}
 				yield $id => $result;
 			}
-		} else {
-			yield from $results;
+		} catch (ClientException $e) {
+			if ($e->getResponse()->getStatusCode() === 404) {
+				yield from [];
+			}
 		}
 	}
 
@@ -78,10 +73,10 @@ class Driver implements DriverContract
 	{
 		try {
 			$this->oneDrive->upload($path, $contents, $config);
-		}catch (ClientException $e){
-			throw UnableToWriteFile::atLocation($path,$e->getMessage(),$e);
-		}catch (GraphException $e){
-			throw UnableToWriteFile::atLocation($path,$e->getMessage(),$e);
+		} catch (ClientException $e) {
+			throw UnableToWriteFile::atLocation($path, $e->getMessage(), $e);
+		} catch (GraphException $e) {
+			throw UnableToWriteFile::atLocation($path, $e->getMessage(), $e);
 		}
 	}
 
@@ -94,10 +89,10 @@ class Driver implements DriverContract
 	{
 		try {
 			return $this->oneDrive->download($path);
-		} catch (ClientException $e){
-			throw UnableToReadFile::fromLocation($path,$e->getMessage(),$e);
-		}catch (GraphException $e){
-			throw UnableToReadFile::fromLocation($path,$e->getMessage(),$e);
+		} catch (ClientException $e) {
+			throw UnableToReadFile::fromLocation($path, $e->getMessage(), $e);
+		} catch (GraphException $e) {
+			throw UnableToReadFile::fromLocation($path, $e->getMessage(), $e);
 		}
 	}
 
@@ -105,13 +100,13 @@ class Driver implements DriverContract
 	{
 		try {
 			$this->oneDrive->delete($path);
-		}catch (ClientException $e){
-			if($e->getResponse()->getStatusCode()===404){
+		} catch (ClientException $e) {
+			if ($e->getResponse()->getStatusCode() === 404) {
 				throw FileNotFoundException::create($path);
 			}
-			throw UnableToDeleteFile::atLocation($path,$e->getMessage(),$e);
-		}catch (GraphException $e){
-			throw UnableToDeleteFile::atLocation($path,$e->getMessage(),$e);
+			throw UnableToDeleteFile::atLocation($path, $e->getMessage(), $e);
+		} catch (GraphException $e) {
+			throw UnableToDeleteFile::atLocation($path, $e->getMessage(), $e);
 		}
 	}
 
@@ -123,15 +118,15 @@ class Driver implements DriverContract
 	public function createDirectory(string $path, Config $config): void
 	{
 		try {
-			$response=$this->oneDrive->createDirectory($path);
-			$file=FileAttributes::fromArray($this->oneDrive->normalizeMetadata($response,$path));
-			if(!$file->isDir()){
-				throw UnableToCreateDirectory::atLocation($path,'File already exists');
+			$response = $this->oneDrive->createDirectory($path);
+			$file = FileAttributes::fromArray($this->oneDrive->normalizeMetadata($response, $path));
+			if (!$file->isDir()) {
+				throw UnableToCreateDirectory::atLocation($path, 'File already exists');
 			}
-		}catch (GraphException $e){
-			throw UnableToCreateDirectory::atLocation($path,$e->getMessage());
-		}catch (ClientException $e){
-			throw UnableToCreateDirectory::atLocation($path,$e->getMessage());
+		} catch (GraphException $e) {
+			throw UnableToCreateDirectory::atLocation($path, $e->getMessage());
+		} catch (ClientException $e) {
+			throw UnableToCreateDirectory::atLocation($path, $e->getMessage());
 		}
 	}
 
