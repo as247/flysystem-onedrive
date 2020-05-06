@@ -49,12 +49,10 @@ class Driver implements DriverContract
 			$results = $this->oneDrive->listChildren($directory);
 			foreach ($results as $id => $result) {
 				$result = $this->oneDrive->normalizeMetadata($result, $directory . '/' . $result['name']);
-				if ($recursive) {
-					if ($result['type'] === 'dir') {
-						yield from $this->listContents($result['path'], $recursive);
-					}
-				}
 				yield $id => $result;
+				if ($recursive && $result['type'] === 'dir') {
+					yield from $this->listContents($result['path'], $recursive);
+				}
 			}
 		} catch (ClientException $e) {
 			if ($e->getResponse()->getStatusCode() === 404) {
