@@ -13,11 +13,13 @@ use As247\Flysystem\DriveSupport\Exception\UnableToRetrieveMetadata;
 use As247\Flysystem\DriveSupport\Exception\UnableToWriteFile;
 use As247\Flysystem\DriveSupport\Service\OneDrive;
 use As247\Flysystem\DriveSupport\Support\FileAttributes;
+use Generator;
 use GuzzleHttp\Exception\ClientException;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
 use Microsoft\Graph\Exception\GraphException;
 use Microsoft\Graph\Graph;
+use Throwable;
 use function GuzzleHttp\Psr7\stream_for;
 
 class Driver implements DriverContract
@@ -31,11 +33,12 @@ class Driver implements DriverContract
 	}
 
 
-	/**
-	 * @param string $directory
-	 * @param bool $recursive
-	 * @return \Generator
-	 */
+    /**
+     * @param string $directory
+     * @param bool $recursive
+     * @return Generator
+     * @throws GraphException
+     */
 	public function listContents(string $directory = '', bool $recursive = false): iterable
 	{
 		try {
@@ -121,6 +124,11 @@ class Driver implements DriverContract
 		}
 	}
 
+    /**
+     * @param string $path
+     * @param mixed $visibility
+     * @throws GraphException
+     */
 	public function setVisibility(string $path, $visibility): void
 	{
 		if ($visibility === AdapterInterface::VISIBILITY_PUBLIC) {
@@ -152,16 +160,32 @@ class Driver implements DriverContract
 		return $this->getMetadata($path);
 	}
 
+    /**
+     * @param string $source
+     * @param string $destination
+     * @param Config $config
+     * @throws GraphException
+     */
 	public function move(string $source, string $destination, Config $config): void
 	{
 		$this->oneDrive->move($source, $destination);
 	}
 
+    /**
+     * @param string $source
+     * @param string $destination
+     * @param Config $config
+     * @throws GraphException
+     */
 	public function copy(string $source, string $destination, Config $config): void
 	{
 		$this->oneDrive->copy($source, $destination);
 	}
 
+    /**
+     * @param string $path
+     * @return bool
+     */
 	public function fileExists(string $path): bool
 	{
 		try {
@@ -172,6 +196,10 @@ class Driver implements DriverContract
 		}
 	}
 
+    /**
+     * @param string $path
+     * @return bool
+     */
 	public function isDirectory(string $path): bool
 	{
 		try {
@@ -182,6 +210,11 @@ class Driver implements DriverContract
 		}
 	}
 
+    /**
+     * @param $path
+     * @return FileAttributes
+     * @throws FileNotFoundException
+     */
 	public function getMetadata($path): FileAttributes
 	{
 		try {
@@ -193,7 +226,7 @@ class Driver implements DriverContract
 				throw new FileNotFoundException($path, 0, $e);
 			}
 			throw UnableToRetrieveMetadata::create($path, 'metadata', '', $e);
-		} catch (\Throwable $e) {
+		} catch (Throwable $e) {
 			throw UnableToRetrieveMetadata::create($path, 'metadata', '', $e);
 		}
 	}
