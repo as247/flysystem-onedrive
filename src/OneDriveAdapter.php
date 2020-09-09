@@ -9,7 +9,6 @@
 namespace As247\Flysystem\OneDrive;
 
 use As247\Flysystem\DriveSupport\Support\DriverForAdapter;
-use As247\Flysystem\DriveSupport\Support\Path;
 use Microsoft\Graph\Graph;
 use League\Flysystem\Adapter\AbstractAdapter;
 
