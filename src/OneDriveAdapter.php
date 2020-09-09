@@ -22,9 +22,6 @@ class OneDriveAdapter extends AbstractAdapter
     	$this->driver=new Driver($graph);
     	$this->setPathPrefix($root);
     }
-    public function applyPathPrefix($path)
-	{
-		return Path::clean(parent::applyPathPrefix($path));
-	}
+
 
 }

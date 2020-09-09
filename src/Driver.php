@@ -7,6 +7,7 @@ use As247\Flysystem\DriveSupport\Contracts\Driver as DriverContract;
 use As247\Flysystem\DriveSupport\Exception\FileNotFoundException;
 use As247\Flysystem\DriveSupport\Exception\InvalidVisibilityProvided;
 use As247\Flysystem\DriveSupport\Exception\UnableToCreateDirectory;
+use As247\Flysystem\DriveSupport\Exception\UnableToDeleteDirectory;
 use As247\Flysystem\DriveSupport\Exception\UnableToDeleteFile;
 use As247\Flysystem\DriveSupport\Exception\UnableToReadFile;
 use As247\Flysystem\DriveSupport\Exception\UnableToRetrieveMetadata;
@@ -106,7 +107,11 @@ class Driver implements DriverContract
 
 	public function deleteDirectory(string $path): void
 	{
-		$this->delete($path);
+	    try {
+            $this->delete($path);
+        }catch (UnableToDeleteFile $e){
+	        throw UnableToDeleteDirectory::atLocation($e->location(),$e->reason(),$e->getPrevious());
+        }
 	}
 
 	public function createDirectory(string $path, Config $config): void
