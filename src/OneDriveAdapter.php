@@ -16,10 +16,13 @@ class OneDriveAdapter extends AbstractAdapter
 {
 	use DriverForAdapter;
 	protected $driver;
-    public function __construct(Graph $graph, string $root = '')
+    public function __construct(Graph $graph, $options = '')
     {
-    	$this->driver=new Driver($graph);
-    	$this->setPathPrefix($root);
+        if(!is_array($options)){
+            $options=['root'=>$options];
+        }
+    	$this->driver=new Driver($graph,$options);
+    	$this->setPathPrefix($options['root']??'');
     }
 
 

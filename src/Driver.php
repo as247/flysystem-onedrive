@@ -28,9 +28,9 @@ class Driver implements DriverContract
 	/** @var Graph */
 	protected $oneDrive;
 
-	public function __construct(Graph $graph)
+	public function __construct(Graph $graph,$options=[])
 	{
-		$this->oneDrive = new OneDrive($graph);
+		$this->oneDrive = new OneDrive($graph,$options);
 	}
 
 
@@ -67,7 +67,10 @@ class Driver implements DriverContract
 	public function writeStream(string $path, $contents, Config $config): void
 	{
 		try {
-			$this->oneDrive->upload($path, $contents, $config);
+			$this->oneDrive->upload($path, $contents);
+            if ($config && $visibility = $config->get('visibility')) {
+                $this->setVisibility($path, $visibility);
+            }
 		} catch (ClientException $e) {
 			throw UnableToWriteFile::atLocation($path, $e->getMessage(), $e);
 		} catch (GraphException $e) {
