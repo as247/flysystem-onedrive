@@ -23,7 +23,10 @@ class OneDriveAdapter extends AbstractAdapter
         }
     	$this->driver=new Driver($graph,$options);
     	$this->setPathPrefix($options['root']??'');
+		$this->throwException=$options['debug']??'';
     }
-
+	public function getTemporaryUrl($path, $expiration=null, $options=[]){
+		return $this->getMetadata($path)['downloadUrl']??'';
+	}
 
 }
