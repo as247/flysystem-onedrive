@@ -14,7 +14,7 @@
   "require": {
     "php": ">=7.1",
     "ext-json": "*",
-    "as247/flysystem-drive-support": "^1.0",
+    "as247/cloud-storage": "^1.0",
     "microsoft/microsoft-graph": "^1.0"
   },
   "autoload": {
