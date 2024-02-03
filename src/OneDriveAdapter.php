@@ -28,6 +28,5 @@ class OneDriveAdapter implements FilesystemAdapter, TemporaryUrlGenerator
         }
     	$this->storage=new OneDrive($graph,$options);
         $this->prefixer = new PathPrefixer($options['root']??'', DIRECTORY_SEPARATOR);
-		$this->throwException=$options['debug']??'';
     }
 }

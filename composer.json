@@ -23,6 +23,11 @@
       "As247\\Flysystem\\OneDrive\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "As247\\Flysystem\\OneDrive\\Tests": "tests/"
+    }
+  },
   "minimum-stability": "dev",
   "prefer-stable": true
 }
