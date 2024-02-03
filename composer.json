@@ -25,7 +25,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "As247\\Flysystem\\OneDrive\\Tests": "tests/"
+      "As247\\Flysystem\\OneDrive\\Tests\\": "tests/"
     }
   },
   "minimum-stability": "dev",
