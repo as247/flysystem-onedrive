@@ -88,7 +88,7 @@ jobs:
         with:
           timeout_minutes: 5
           max_attempts: 5
-          command: composer require league/flysystem-adapter-test-utilities:^3.0 phpunit/phpunit:^9.0 --no-interaction --no-update
+          command: composer require league/flysystem-adapter-test-utilities:^3.21 phpunit/phpunit:^9.0 --no-interaction --no-update
 
       - name: Install dependencies
         uses: nick-invision/retry@v1

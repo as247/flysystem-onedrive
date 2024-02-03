@@ -15,7 +15,7 @@
     "php": ">=7.1",
     "ext-json": "*",
     "as247/cloud-storages": "^1.2",
-    "league/flysystem": "^3.0",
+    "league/flysystem": "^3.10",
     "microsoft/microsoft-graph": "^1.0"
   },
   "autoload": {
