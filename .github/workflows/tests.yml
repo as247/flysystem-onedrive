@@ -12,9 +12,8 @@ jobs:
       fail-fast: true
       matrix:
         php: ['8.0', '8.1']
-        stability: [prefer-lowest, prefer-stable]
 
-    name: PHP ${{ matrix.php }} - ${{ matrix.stability }}
+    name: PHP ${{ matrix.php }}
 
     steps:
       - name: Checkout code
@@ -41,7 +40,7 @@ jobs:
         with:
           timeout_minutes: 5
           max_attempts: 5
-          command: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
+          command: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
         run: vendor/bin/phpunit --verbose
@@ -49,17 +48,17 @@ jobs:
           odClientId: ${{ secrets.ONEDRIVE_CLIENT_ID }}
           odClientSecret: ${{ secrets.ONEDRIVE_CLIENT_SECRET }}
           odRefreshToken: ${{ secrets.ONEDRIVE_REFRESH_TOKEN }}
+          odRoot: TestFly/${{ matrix.php }}-linux
 
 
 
   windows_tests:
     runs-on: windows-2019
-
+    depends-on: linux_tests
     strategy:
       fail-fast: true
       matrix:
         php: ['8.0', '8.1']
-        stability: [prefer-lowest, prefer-stable]
 
     name: PHP ${{ matrix.php }} - ${{ matrix.stability }} - Windows
 
@@ -92,7 +91,7 @@ jobs:
         with:
           timeout_minutes: 5
           max_attempts: 5
-          command: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
+          command: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
         run: vendor/bin/phpunit --verbose
@@ -100,4 +99,5 @@ jobs:
           odClientId: ${{ secrets.ONEDRIVE_CLIENT_ID }}
           odClientSecret: ${{ secrets.ONEDRIVE_CLIENT_SECRET }}
           odRefreshToken: ${{ secrets.ONEDRIVE_REFRESH_TOKEN }}
+          odRoot: TestFly/${{ matrix.php }}-linux
 

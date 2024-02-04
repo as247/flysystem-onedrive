@@ -21,7 +21,7 @@ class FlysystemOneDriveTest extends FilesystemAdapterTestCase
         $token->setRefreshToken($_ENV['odRefreshToken']);
         $graph->setAccessToken($token->getAccessToken());
         $options=[
-            'root'=>$_ENV['odRoot'].'a',
+            'root'=>$_ENV['odRoot'],
             //'debug'=>true,
             //'log'=>true,
         ];
