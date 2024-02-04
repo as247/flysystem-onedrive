@@ -5,82 +5,46 @@ on:
   pull_request:
 
 jobs:
-  linux_tests:
-    runs-on: ubuntu-20.04
+  test:
+    runs-on: ${{ matrix.os }}
 
     strategy:
-      fail-fast: true
       matrix:
+        os: [ubuntu-20.04, windows-2019]
         php: ['8.0', '8.1']
-      max-parallel: 1
+      fail-fast: true
+      max-parallel: 2
 
-    name: PHP ${{ matrix.php }}
+    name: PHP ${{ matrix.php }} - ${{ matrix.os }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup PHP
+      - name: Setup PHP on Linux
+        if: matrix.os != 'windows-2019'
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, igbinary, msgpack, lzf, zstd, lz4, memcached
-          ini-values: error_reporting=E_ALL
           tools: composer:v2
           coverage: none
 
-      - name: Prepare test environment
-        uses: nick-invision/retry@v1
+      - name: Setup PHP on Windows
+        if: matrix.os == 'windows-2019'
+        uses: shivammathur/setup-php@v2
         with:
-          timeout_minutes: 5
-          max_attempts: 5
-          command: composer require league/flysystem-adapter-test-utilities:^3.21 phpunit/phpunit:^9.6.16 --no-interaction --no-update
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, gd, pdo_mysql, fileinfo, ftp, redis, memcached
+          tools: composer:v2
+          coverage: none
 
-      - name: Install dependencies
-        uses: nick-invision/retry@v1
-        with:
-          timeout_minutes: 5
-          max_attempts: 5
-          command: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
-
-      - name: Execute tests
-        run: vendor/bin/phpunit --verbose
-        env:
-          odClientId: ${{ secrets.ONEDRIVE_CLIENT_ID }}
-          odClientSecret: ${{ secrets.ONEDRIVE_CLIENT_SECRET }}
-          odRefreshToken: ${{ secrets.ONEDRIVE_REFRESH_TOKEN }}
-          odRoot: TestFly/${{ matrix.php }}-linux-${{ github.run_id }}
-
-
-
-  windows_tests:
-    runs-on: windows-2019
-
-    strategy:
-      fail-fast: true
-      matrix:
-        php: ['8.0', '8.1']
-      max-parallel: 1
-
-    name: PHP ${{ matrix.php }} - Windows
-
-    steps:
-      - name: Set git to use LF
+      - name: Set LF on Windows
+        if: matrix.os == 'windows-2019'
         run: |
           git config --global core.autocrlf false
           git config --global core.eol lf
 
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, gd, pdo_mysql, fileinfo, ftp, memcached
-          tools: composer:v2
-          coverage: none
-
       - name: Prepare test environment
         uses: nick-invision/retry@v1
         with:
@@ -101,5 +65,4 @@ jobs:
           odClientId: ${{ secrets.ONEDRIVE_CLIENT_ID }}
           odClientSecret: ${{ secrets.ONEDRIVE_CLIENT_SECRET }}
           odRefreshToken: ${{ secrets.ONEDRIVE_REFRESH_TOKEN }}
-          odRoot: TestFly/${{ matrix.php }}-windows-${{ github.run_id }}
-
+          odRoot: TestFly/${{ matrix.php }}-${{ matrix.os }}-${{ github.run_id }}
