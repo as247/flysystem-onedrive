@@ -21,11 +21,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup PHP
+      - name: Setup PHP on Linux
+        if: matrix.os != 'windows-2019'
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, igbinary, msgpack, lzf, zstd, lz4, memcached
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup PHP on Windows
+        if: matrix.os == 'windows-2019'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite, gd, pdo_mysql, fileinfo, ftp, redis, memcached
           tools: composer:v2
           coverage: none
 
