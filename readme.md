@@ -6,7 +6,7 @@
 ## Installation
 
 ```bash
-composer require as247/flysystem-onedrive:^1.0
+composer require as247/flysystem-onedrive:^3.0
 ```
 
 ## Usage
