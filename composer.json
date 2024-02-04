@@ -14,9 +14,9 @@
   "require": {
     "php": ">=7.1",
     "ext-json": "*",
-    "as247/cloud-storages": "^1.2.4",
+    "as247/cloud-storages": "^1.2.6",
     "league/flysystem": "^3.23",
-    "microsoft/microsoft-graph": "^1.0"
+    "microsoft/microsoft-graph": "^1.110"
   },
   "autoload": {
     "psr-4": {

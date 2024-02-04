@@ -13,7 +13,7 @@ jobs:
         os: [ubuntu-20.04, windows-2019]
         php: ['8.0', '8.1']
       fail-fast: true
-      max-parallel: 2
+      max-parallel: 1
 
     name: PHP ${{ matrix.php }} - ${{ matrix.os }}
 
