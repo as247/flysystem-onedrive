@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup PHP on Linux
         if: matrix.os != 'windows-2019'
@@ -46,14 +46,14 @@ jobs:
           git config --global core.eol lf
 
       - name: Prepare test environment
-        uses: nick-invision/retry@v1
+        uses: nick-invision/retry@v3
         with:
           timeout_minutes: 5
           max_attempts: 5
           command: composer require league/flysystem-adapter-test-utilities:^3.21 phpunit/phpunit:^9.6.16 --no-interaction --no-update
 
       - name: Install dependencies
-        uses: nick-invision/retry@v1
+        uses: nick-invision/retry@v3
         with:
           timeout_minutes: 5
           max_attempts: 5
