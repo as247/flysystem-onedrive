@@ -14,14 +14,18 @@
   "require": {
     "php": ">=7.1",
     "ext-json": "*",
-    "league/flysystem": "^2.0",
-    "as247/cloud-storages": "^1.0",
-    "as247/flysystem-drive-support": "^2.0",
+    "as247/cloud-storages": "^1.2.4",
+    "league/flysystem": "^3.23",
     "microsoft/microsoft-graph": "^1.0"
   },
   "autoload": {
     "psr-4": {
       "As247\\Flysystem\\OneDrive\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "As247\\Flysystem\\OneDrive\\Tests\\": "tests/"
     }
   },
   "minimum-stability": "dev",

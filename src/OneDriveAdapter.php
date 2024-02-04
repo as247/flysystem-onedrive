@@ -10,12 +10,13 @@ namespace As247\Flysystem\OneDrive;
 
 
 use As247\CloudStorages\Storage\OneDrive;
-use As247\Flysystem\DriveSupport\StorageToAdapter;
+use As247\CloudStorages\Support\StorageToAdapter;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\PathPrefixer;
+use League\Flysystem\UrlGeneration\TemporaryUrlGenerator;
 use Microsoft\Graph\Graph;
 
-class OneDriveAdapter implements FilesystemAdapter
+class OneDriveAdapter implements FilesystemAdapter, TemporaryUrlGenerator
 {
 	use StorageToAdapter;
 	protected $storage;
@@ -27,10 +28,5 @@ class OneDriveAdapter implements FilesystemAdapter
         }
     	$this->storage=new OneDrive($graph,$options);
         $this->prefixer = new PathPrefixer($options['root']??'', DIRECTORY_SEPARATOR);
-		$this->throwException=$options['debug']??'';
     }
-	public function getTemporaryUrl($path, $expiration=null, $options=[]){
-		return $this->getMetadata($path)['@downloadUrl']??'';
-	}
-
 }
