@@ -8,15 +8,16 @@
 
 namespace As247\Flysystem\OneDrive;
 
-
 use As247\CloudStorages\Storage\OneDrive;
-use As247\Flysystem\DriveSupport\StorageToAdapter;
+use As247\CloudStorages\Support\GetTemporaryUrl;
+use As247\CloudStorages\Support\StorageToAdapterV1;
 use Microsoft\Graph\Graph;
 use League\Flysystem\Adapter\AbstractAdapter;
 
 class OneDriveAdapter extends AbstractAdapter
 {
-	use StorageToAdapter;
+	use StorageToAdapterV1;
+    use GetTemporaryUrl;
 	protected $storage;
     public function __construct(Graph $graph, $options = '')
     {
