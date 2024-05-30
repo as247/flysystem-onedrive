@@ -26,9 +26,6 @@ class OneDriveAdapter implements FilesystemAdapter, TemporaryUrlGenerator
         if(!is_array($options)){
             $options=['root'=>$options];
         }
-        if(!isset($options['root']) && isset($options['prefix'])){
-            $options['root']=$options['prefix'];
-        }
     	$this->storage=new OneDrive($graph,$options);
         $this->prefixer = new PathPrefixer($options['root']??'', DIRECTORY_SEPARATOR);
     }
